@@ -23,6 +23,9 @@ library(skimr)
 library(gifski)
 library(gganimate)
 library(tidyverse)
+library(ggplot2)
+library(gganimate)
+theme_set(theme_bw())
 
 # Thanks to amazing CA Rucha Joshi for preparing this county dataset and for
 # writing a draft of this script.
@@ -39,20 +42,72 @@ county <- read_rds("county.rds")
 
 We are interested in understanding how poverty is correlated with (and influenced by?) education.
 
+```{r}
+
+glimpse(county)
+summary(county)
+
+```
+
 
 # Scene 2
 
 **Prompt** Let’s start by exploring our numerical outcome variable `poverty` and our numerical explanatory variable `less_than_hs`. What is the average poverty rate in the US? How does this compare with that of your county (if you are not from US look up Middlesex County - the county that Cambridge, MA is in)? Furthermore, what is the average percentage of adults without a high school diploma? Which state's county has the highest percentage of adults without a high school diploma?
+
+```{r}
+
+# Avg poverty across country
+
+avg_poverty_rate <- county %>%
+  select(poverty) %>%
+  summarize(avg_rate = mean(poverty))
+
+# Avg poverty in Stark County
+
+avg_poverty_stark <- county %>%
+  filter(name == "Stark", state == "OH") %>%
+  select(poverty) %>%
+  summarize(avg_rate = mean(poverty))
+
+# Avg without hs diploma
+
+avg_less_than_hs <- county %>%
+  select(less_than_hs) %>%
+  summarize(avg_less_hs = mean(less_than_hs))
+
+# State county highest percentage without hs diploma
+
+county_without_hs <- county %>%
+  select(region, state, name, less_than_hs) %>%
+  arrange(desc(less_than_hs)) %>%
+  head(1)
+
+```
 
 
 # Scene 3
 
 **Prompt:** What is the correlation coefficient of `poverty` and `less_than_hs`? What does it mean? What does it suggest about the relation between the percent of the population in poverty in 2018 and the percent of the population with less than a high school degree in 2014? 
 
+```{r}
+
+corr_coeff <- county %>%
+  summarize(corr = cor(poverty, less_than_hs))
+
+```
+
 
 # Scene 4
 
 **Prompt:** Use a scatterplot to visualize this data, including a straight line of best fit. The dependent variable is `poverty`. The independent variable is `less_than_hs`.
+
+```{r}
+
+ggplot(county, aes(poverty, less_than_hs)) + 
+  geom_point() + 
+  theme_classic() +
+  geom_smooth(method = "lm", se = FALSE)
+```
 
 
 # Scene 5
@@ -60,6 +115,20 @@ We are interested in understanding how poverty is correlated with (and influence
 **Prompt** Create an animation of the scatterplot above with the percent of adults with less than a high school diploma on the x axis and the poverty rate in the y axis. This scatterplot should transition through the four US regions. Hint: Read the [Animation appendix](https://davidkane9.github.io/PPBDS/C-animation.html) of the *[Primer](https://davidkane9.github.io/PPBDS/)*. You need to do two things. First, make the points a different color for each region. Second, add one **gganimate** command to the basic static `ggplot()` call.
 
 Here is an example: https://rpubs.com/ruchajoshi/regional_poverty
+
+```{r}
+
+ggplot(county, aes(poverty, less_than_hs, color = region)) + 
+  geom_point() + 
+  theme_classic() +
+  # geom_smooth(method = "lm", se = FALSE) +
+  transition_states(region, transition_length = 2, state_length = 1) +
+  labs(title = "Correlating Poverty with Education",
+       x = "Poverty",
+       y = "Percentage without HS Degree",
+       color = "Region")
+
+```
 
 
 # Scene 6
