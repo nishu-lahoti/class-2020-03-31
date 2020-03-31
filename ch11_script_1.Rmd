@@ -140,6 +140,16 @@ ggplot(county, aes(poverty, less_than_hs, color = region)) +
 
 **Prompt:** Assume we want to create an explanatory model. Create a new variable, `good_education`, which is 1 if `less_than_hs` is less than 13 and 0 if it is not. In other words, we are defining counties with fewer residents who have less than a high school education as having a `good_education`. Counties with more do not have a `good_education`. (13% is about the average across the US.)  
 
+```{r}
+
+explanatory_model <- county %>%
+  mutate(good_education = ifelse(less_than_hs < 13, 1, 0)) %>%
+  group_by(good_education) %>%
+  summarize(avg_poverty = mean(poverty))
+
+```
+
+
 First, what is the average poverty in the `good_education` = 1 counties versus `good_education` = 0 counties?
 
 Second, does this suggest that `good_education` is associated with less poverty? If a new county had `good_education` what would you guess its povery rate is?
